@@ -1,5 +1,7 @@
 # ComfyGo
 
+Note: This is very much a work in progress.
+
 A fast, headless CLI for running Stable Diffusion image generation workflows without a ComfyUI server. Designed for automated batch generation with randomized parameters — currently targeting the [ZImage Turbo](https://civitai.com/models/618526/zimage-turbo) (Aura Flow) architecture, with plans to generalize to other workflows with support for other architectures (SDXL, Flux, Qwen).
 
 ## Why ComfyGo?
