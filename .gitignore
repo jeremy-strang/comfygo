@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Hatch
+.hatch/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project: configs (keep only the template)
+configs/**/*.yml
+configs/**/*.yaml
+configs/**/*.txt
+configs/**/*.json
+!configs/config.yml
+
+# Project: model files and outputs
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.gguf
+*.pem
+default/
+
+# Project: generated images
+*.jpg
+*.jpeg
+*.JPG
+*.JPEG
+*.png
+*.PNG
+*.webp
+*.webm
+*.WEBP
+*.WEBM
+*.jfif
+*.JFIF
+
+# Project: prompt files (catch-all; exceptions can be added below)
+**/*.txt

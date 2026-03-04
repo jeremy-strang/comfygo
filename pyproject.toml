@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "comfygo"
+version = "0.8.0"
+description = "A fast, headless CLI for running Stable Diffusion image generation workflows without a ComfyUI server."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Jeremy Strang" }]
+
+dependencies = [
+  "colorama",
+  "cryptography",
+  "Pillow",
+  "psutil",
+  "pygame",
+  "pynvml",
+  "pyyaml",
+  "rich",
+  "tiktoken",
+]
+
+[project.scripts]
+comfygo = "comfygo.cli.main:main"
+
+# Ensure both package code and data make it into the wheel
+[tool.hatch.build.targets.wheel]
+packages = ["src/comfygo"]
+
+[tool.hatch.build]
+# Whitelist code
+include = [
+  "comfygo/**/*.py",
+]
