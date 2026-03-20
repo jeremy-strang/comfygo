@@ -165,6 +165,11 @@ def run_workflow(config: WorkflowConfig) -> None:
             try:
                 global_run_idx += 1
 
+                ckpt_id = checkpoint_entry.get_id()
+                filename_code = os.path.basename(
+                    checkpoint_entry.checkpoint.replace(".safetensors", "")[0:100]
+                )
+
                 log.info(
                     f"Checkpoint {ckpt_idx + 1}/{len(checkpoint_list)}: "
                     f"{checkpoint_entry.checkpoint}"
@@ -361,8 +366,59 @@ def run_workflow(config: WorkflowConfig) -> None:
                     decoded = vae_decode(vae_result[0], second_pass[0])
                     current_image = decoded[0]
 
+                    tf = time.perf_counter()
+                    metadata.update({
+                        "Elapsed": tf - ti,
+                        "Seed": seed,
+                        "Checkpoint": checkpoint_entry.checkpoint,
+                        "Steps": eff_steps,
+                        "EndAtStep": eff_end_at_step,
+                        "CFG": eff_cfg,
+                        "Sampler": eff_sampler,
+                        "Scheduler": eff_scheduler,
+                        "Shift": eff_shift,
+                        "Latent": f"{round(eff_width)}x{round(eff_height)}",
+                        "Loras": "[" + (
+                            ", ".join(f"{l.name} ({l.get_strength()})" for l in effective_loras)
+                            if effective_loras else ""
+                        ) + "]",
+                        "LorasPass1": "[" + (
+                            ", ".join(f"{l.name} ({l.get_strength()})" for l in effective_loras_pass1)
+                            if effective_loras_pass1 else ""
+                        ) + "]",
+                        "LorasPass2": "[" + (
+                            ", ".join(f"{l.name} ({l.get_strength()})" for l in effective_loras_pass2)
+                            if effective_loras_pass2 else ""
+                        ) + "]",
+                        "Prompt": prompt,
+                        "PromptTokens": Prompter.count_tokens(prompt),
+                        "Subject": subject,
+                        "SubjectTokens": Prompter.count_tokens(subject),
+                        "Negative": prompter.negative_prompt,
+                        "NegativeTokens": Prompter.count_tokens(prompter.negative_prompt),
+                    })
+                    tf = time.perf_counter()
+                    metadata.update({
+                        "Elapsed": tf - ti,
+                    })
+
+                    save_images_with_metadata(
+                        current_image,
+                        config.output.path,
+                        filename_prefix=f"{ckpt_id}_{runner_id}_S{ckpt_idx}R{r}_Initial",
+                        metadata=metadata,
+                        extension="png",
+                        dpi=300,
+                        quality=90,
+                        optimize=True,
+                        number_padding=2,
+                    )
+
+
                     if config.detailing and config.detailing.detailers:
+                        detailer_idx = 0
                         for detailer_cfg in config.detailing.detailers:
+                            detailer_idx += 1
                             providers = detailer_providers[detailer_cfg.detector_model]
 
                             det_steps = detailer_cfg.get_steps(config.detailing.steps)
@@ -415,49 +471,33 @@ def run_workflow(config: WorkflowConfig) -> None:
                                 tiled_decode=detailer_cfg.tiled_decode,
                             )
                             current_image = detail_result[0]
+                            tf = time.perf_counter()
+                            metadata.update({
+                                "Elapsed": tf - ti,
+                            })
+
+                            save_images_with_metadata(
+                                current_image,
+                                config.output.path,
+                                filename_prefix=f"{ckpt_id}_{runner_id}_S{ckpt_idx}R{r}_D{detailer_idx}",
+                                metadata=metadata,
+                                extension="png",
+                                dpi=300,
+                                quality=90,
+                                optimize=True,
+                                number_padding=2,
+                            )
 
                     tf = time.perf_counter()
                     metadata.update({
                         "Elapsed": tf - ti,
-                        "Seed": seed,
-                        "Checkpoint": checkpoint_entry.checkpoint,
-                        "Steps": eff_steps,
-                        "EndAtStep": eff_end_at_step,
-                        "CFG": eff_cfg,
-                        "Sampler": eff_sampler,
-                        "Scheduler": eff_scheduler,
-                        "Shift": eff_shift,
-                        "Latent": f"{round(eff_width)}x{round(eff_height)}",
-                        "Loras": "[" + (
-                            ", ".join(f"{l.name} ({l.get_strength()})" for l in effective_loras)
-                            if effective_loras else ""
-                        ) + "]",
-                        "LorasPass1": "[" + (
-                            ", ".join(f"{l.name} ({l.get_strength()})" for l in effective_loras_pass1)
-                            if effective_loras_pass1 else ""
-                        ) + "]",
-                        "LorasPass2": "[" + (
-                            ", ".join(f"{l.name} ({l.get_strength()})" for l in effective_loras_pass2)
-                            if effective_loras_pass2 else ""
-                        ) + "]",
-                        "Prompt": prompt,
-                        "PromptTokens": Prompter.count_tokens(prompt),
-                        "Subject": subject,
-                        "SubjectTokens": Prompter.count_tokens(subject),
-                        "Negative": prompter.negative_prompt,
-                        "NegativeTokens": Prompter.count_tokens(prompter.negative_prompt),
                     })
-
-                    ckpt_id = checkpoint_entry.get_id()
-                    filename_code = os.path.basename(
-                        checkpoint_entry.checkpoint.replace(".safetensors", "")[0:100]
-                    )
 
                     save_images_with_metadata(
                         current_image,
                         config.output.path,
                         filename_prefix=f"{ckpt_id}_{runner_id}_S{ckpt_idx}R{r}",
-                        metadata=None,
+                        metadata=metadata,
                         extension="png",
                         dpi=300,
                         quality=90,
